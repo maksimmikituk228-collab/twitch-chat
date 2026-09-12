@@ -1,654 +1,726 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="uk">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Twitch Chat Multi-Account — Olexandrich</title>
     <style>
-      :root {
-        --bg-main: #0e0e10;
-        --bg-secondary: #18181b;
-        --bg-tertiary: #1f1f23;
-        --border-color: #2f2f35;
-        --accent: #9146ff;
-        --accent-hover: #772ce8;
-        --text-main: #efeff1;
-        --text-muted: #adadb8;
-        --danger: #eb0400;
-        --success: #00f59b;
-      }
+        :root {
+            --bg-main: #0e0e10;
+            --bg-secondary: #18181b;
+            --bg-tertiary: #1f1f23;
+            --border-color: #2f2f35;
+            --accent: #9146ff;
+            --accent-hover: #772ce8;
+            --text-main: #efeff1;
+            --text-muted: #adadb8;
+            --danger: #eb0400;
+            --success: #00f59b;
+        }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        font-family:
-          Inter,
-          -apple-system,
-          BlinkMacSystemFont,
-          "Segoe UI",
-          Roboto,
-          sans-serif;
-        -webkit-tap-highlight-color: transparent;
-      }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-      body {
-        background-color: var(--bg-main);
-        color: var(--text-main);
-        height: 100dvh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        overflow: hidden;
-      }
-
-      .chat-app {
-        width: 100%;
-        max-width: 900px;
-        height: 100dvh;
-        background: var(--bg-secondary);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      }
-
-      /* Десктопний вигляд із відступами */
-      @media (min-width: 601px) {
         body {
-          padding: 16px;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            height: 100dvh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
         }
+
         .chat-app {
-          height: 92vh;
-          border-radius: 12px;
-          border: 1px solid var(--border-color);
-          box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 900px;
+            height: 100dvh;
+            background: var(--bg-secondary);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
-      }
 
-      /* Хедер із врахуванням 'чубчика' iPhone */
-      header {
-        padding-top: max(12px, env(safe-area-inset-top));
-        padding-bottom: 12px;
-        padding-left: max(16px, env(safe-area-inset-left));
-        padding-right: max(16px, env(safe-area-inset-right));
-        background: var(--bg-tertiary);
-        border-bottom: 1px solid var(--border-color);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        flex-shrink: 0;
-      }
+        @media (min-width: 601px) {
+            body {
+                padding: 16px;
+            }
+            .chat-app {
+                height: 92vh;
+                border-radius: 12px;
+                border: 1px solid var(--border-color);
+                box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+            }
+        }
 
-      .channel-info {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 0.95rem;
-      }
+        /* Хедер (з відступом під "чубчик" iPhone) */
+        header {
+            padding-top: max(12px, env(safe-area-inset-top));
+            padding-bottom: 12px;
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-shrink: 0;
+        }
 
-      .status-dot {
-        width: 9px;
-        height: 9px;
-        border-radius: 50%;
-        background-color: var(--danger);
-        box-shadow: 0 0 8px var(--danger);
-        transition: all 0.3s ease;
-      }
+        .channel-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
 
-      .status-dot.online {
-        background-color: var(--success);
-        box-shadow: 0 0 8px var(--success);
-      }
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background-color: var(--danger);
+            box-shadow: 0 0 8px var(--danger);
+            transition: all 0.3s ease;
+        }
 
-      .channel-title {
-        font-weight: 700;
-        white-space: nowrap;
-      }
+        .status-dot.online {
+            background-color: var(--success);
+            box-shadow: 0 0 8px var(--success);
+        }
 
-      .settings-btn {
-        background: #2b2b31;
-        border: 1px solid var(--border-color);
-        color: var(--text-main);
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-size: 0.85rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        white-space: nowrap;
-      }
+        .channel-title {
+            font-weight: 700;
+            white-space: nowrap;
+        }
 
-      /* Область повідомлень */
-      .messages-container {
-        flex: 1;
-        overflow-y: auto;
-        padding: 12px max(16px, env(safe-area-inset-right)) 12px
-          max(16px, env(safe-area-inset-left));
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        scroll-behavior: smooth;
-        -webkit-overflow-scrolling: touch;
-      }
+        .settings-btn {
+            background: #2b2b31;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
 
-      .message-row {
-        line-height: 1.4;
-        font-size: 0.95rem;
-        word-break: break-word;
-        padding: 4px 6px;
-        border-radius: 6px;
-      }
+        /* Область повідомлень */
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
 
-      .time {
-        color: var(--text-muted);
-        font-size: 0.75rem;
-        margin-right: 6px;
-      }
+        .message-row {
+            line-height: 1.4;
+            font-size: 0.95rem;
+            word-break: break-word;
+            padding: 4px 6px;
+            border-radius: 6px;
+        }
 
-      .username {
-        font-weight: 700;
-        margin-right: 6px;
-      }
+        .time {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin-right: 6px;
+        }
 
-      .system-msg {
-        color: var(--text-muted);
-        font-size: 0.85rem;
-        font-style: italic;
-      }
+        .username {
+            font-weight: 700;
+            margin-right: 6px;
+        }
 
-      /* Горизонтальна смужка акаунтів */
-      .account-bar {
-        background: var(--bg-tertiary);
-        padding: 8px max(12px, env(safe-area-inset-right)) 8px
-          max(12px, env(safe-area-inset-left));
-        border-top: 1px solid var(--border-color);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        overflow-x: auto;
-        white-space: nowrap;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        flex-shrink: 0;
-      }
+        .system-msg {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-style: italic;
+        }
 
-      .account-bar::-webkit-scrollbar {
-        display: none;
-      }
+        /* Вибір активного акаунту */
+        .account-bar {
+            background: var(--bg-tertiary);
+            padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            flex-shrink: 0;
+        }
 
-      .account-slot {
-        flex-shrink: 0;
-        padding: 8px 14px;
-        background: #141416;
-        border: 1px solid var(--border-color);
-        border-radius: 20px;
-        color: var(--text-muted);
-        cursor: pointer;
-        font-size: 0.85rem;
-        font-weight: 600;
-        transition: all 0.2s;
-      }
+        .account-bar::-webkit-scrollbar {
+            display: none;
+        }
 
-      .account-slot.active {
-        background: rgba(145, 70, 255, 0.2);
-        border-color: var(--accent);
-        color: #fff;
-        box-shadow: 0 0 10px rgba(145, 70, 255, 0.35);
-      }
+        .account-slot {
+            flex-shrink: 0;
+            padding: 8px 14px;
+            background: #141416;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
 
-      /* Панель вводу (з урахуванням нижнього бару iPhone) */
-      .chat-input-wrapper {
-        padding-top: 10px;
-        padding-bottom: max(12px, env(safe-area-inset-bottom));
-        padding-left: max(12px, env(safe-area-inset-left));
-        padding-right: max(12px, env(safe-area-inset-right));
-        background: var(--bg-secondary);
-        border-top: 1px solid var(--border-color);
-        display: flex;
-        gap: 8px;
-        flex-shrink: 0;
-      }
+        .account-slot.active {
+            background: rgba(145, 70, 255, 0.2);
+            border-color: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(145, 70, 255, 0.35);
+        }
 
-      /* font-size: 16px обов'язково запобігає авто-зуму Safari на iPhone */
-      .input-box {
-        flex: 1;
-        background: var(--bg-main);
-        border: 1px solid var(--border-color);
-        color: var(--text-main);
-        padding: 12px 14px;
-        border-radius: 10px;
-        outline: none;
-        font-size: 16px;
-      }
+        /* Введення повідомлення */
+        .chat-input-wrapper {
+            padding-top: 10px;
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+            padding-left: max(12px, env(safe-area-inset-left));
+            padding-right: max(12px, env(safe-area-inset-right));
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
 
-      .input-box:focus {
-        border-color: var(--accent);
-      }
+        .input-box {
+            flex: 1;
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px 14px;
+            border-radius: 10px;
+            outline: none;
+            font-size: 16px; /* Запобігає зуму на iPhone */
+        }
 
-      .send-btn {
-        background: var(--accent);
-        color: #fff;
-        border: none;
-        padding: 0 18px;
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: 0.95rem;
-        cursor: pointer;
-        min-height: 44px;
-      }
+        .input-box:focus {
+            border-color: var(--accent);
+        }
 
-      /* Модальне вікно (на мобільному розгортається на весь екран) */
-      .modal {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.75);
-        backdrop-filter: blur(6px);
-        align-items: center;
-        justify-content: center;
-        z-index: 999;
-      }
+        .send-btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 0 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            min-height: 44px;
+        }
 
-      .modal.open {
-        display: flex;
-      }
+        /* Модальне вікно */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(6px);
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
 
-      .modal-content {
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        padding-top: max(16px, env(safe-area-inset-top));
-        padding-bottom: max(16px, env(safe-area-inset-bottom));
-        padding-left: max(16px, env(safe-area-inset-left));
-        padding-right: max(16px, env(safe-area-inset-right));
-      }
+        .modal.open {
+            display: flex;
+        }
 
-      @media (min-width: 601px) {
         .modal-content {
-          width: 90%;
-          max-width: 620px;
-          height: auto;
-          max-height: 85vh;
-          border-radius: 14px;
-          padding: 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding-top: max(16px, env(safe-area-inset-top));
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
         }
-      }
 
-      .modal-scroll-area {
-        flex: 1;
-        overflow-y: auto;
-        margin: 14px 0;
-        padding-right: 4px;
-        -webkit-overflow-scrolling: touch;
-      }
+        @media (min-width: 601px) {
+            .modal-content {
+                width: 90%;
+                max-width: 620px;
+                height: auto;
+                max-height: 88vh;
+                border-radius: 14px;
+                padding: 24px;
+            }
+        }
 
-      .slot-card {
-        background: var(--bg-main);
-        border: 1px solid var(--border-color);
-        border-radius: 10px;
-        padding: 12px;
-        margin-bottom: 12px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        position: relative;
-      }
+        /* Секція Експорту / Імпорту */
+        .sync-box {
+            background: #131316;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-      .slot-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
+        .sync-buttons {
+            display: flex;
+            gap: 8px;
+        }
 
-      .slot-title {
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: var(--accent);
-        text-transform: uppercase;
-      }
+        .sync-btn {
+            flex: 1;
+            background: #25252b;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 9px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
 
-      .delete-slot-btn {
-        background: transparent;
-        border: none;
-        color: var(--danger);
-        cursor: pointer;
-        font-size: 0.85rem;
-        padding: 4px 8px;
-        border-radius: 4px;
-      }
+        .sync-btn:hover {
+            border-color: var(--accent);
+        }
 
-      .slot-card input {
-        background: var(--bg-tertiary);
-        border: 1px solid var(--border-color);
-        color: #fff;
-        padding: 10px 12px;
-        border-radius: 6px;
-        font-size: 16px;
-        outline: none;
-        width: 100%;
-      }
+        .sync-textarea {
+            width: 100%;
+            height: 70px;
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+        }
 
-      .slot-card input:focus {
-        border-color: var(--accent);
-      }
+        .sync-textarea:focus {
+            border-color: var(--accent);
+        }
 
-      .add-account-btn {
-        width: 100%;
-        background: transparent;
-        border: 2px dashed var(--border-color);
-        color: var(--text-main);
-        padding: 12px;
-        border-radius: 10px;
-        cursor: pointer;
-        font-size: 0.95rem;
-        font-weight: 600;
-        margin-bottom: 12px;
-        transition: border-color 0.2s;
-      }
+        .modal-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            margin: 14px 0;
+            padding-right: 4px;
+            -webkit-overflow-scrolling: touch;
+        }
 
-      .add-account-btn:hover {
-        border-color: var(--accent);
-        color: var(--accent);
-      }
+        .slot-card {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-      .modal-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        flex-shrink: 0;
-      }
+        .slot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .slot-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+
+        .delete-slot-btn {
+            background: transparent;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 4px 8px;
+        }
+
+        .slot-card input {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+            width: 100%;
+        }
+
+        .slot-card input:focus {
+            border-color: var(--accent);
+        }
+
+        .add-account-btn {
+            width: 100%;
+            background: transparent;
+            border: 2px dashed var(--border-color);
+            color: var(--text-main);
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+
+        .add-account-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-shrink: 0;
+        }
     </style>
-  </head>
-  <body>
-    <div class="chat-app">
-      <header>
+</head>
+<body>
+
+<div class="chat-app">
+    <header>
         <div class="channel-info">
-          <div id="statusDot" class="status-dot"></div>
-          <span class="channel-title"
-            >#<span style="color: var(--accent)">olexandrich</span></span
-          >
+            <div id="statusDot" class="status-dot"></div>
+            <span class="channel-title">#<span style="color: var(--accent);">olexandrich</span></span>
         </div>
         <button class="settings-btn" onclick="openModal()">⚙️ Акаунти</button>
-      </header>
+    </header>
 
-      <div id="messagesContainer" class="messages-container">
+    <div id="messagesContainer" class="messages-container">
         <div class="system-msg">Підключення до чату...</div>
-      </div>
-
-      <!-- Горизонтальний скрол вибору акаунтів -->
-      <div class="account-bar" id="accountBar"></div>
-
-      <form class="chat-input-wrapper" onsubmit="handleSendMessage(event)">
-        <input
-          type="text"
-          id="chatInput"
-          class="input-box"
-          placeholder="Повідомлення..."
-          autocomplete="off"
-        />
-        <button type="submit" class="send-btn">➤</button>
-      </form>
     </div>
 
-    <!-- Модальне вікно редагування акаунтів -->
-    <div class="modal" id="settingsModal">
-      <div class="modal-content">
-        <h2 style="font-size: 1.25rem">Керування акаунтами</h2>
-        <p
-          style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px"
-        >
-          Додавайте будь-яку кількість акаунтів. Токен вставляйте з поля
-          <b>Access token</b>.
-        </p>
+    <div class="account-bar" id="accountBar"></div>
+
+    <form class="chat-input-wrapper" onsubmit="handleSendMessage(event)">
+        <input type="text" id="chatInput" class="input-box" placeholder="Повідомлення..." autocomplete="off">
+        <button type="submit" class="send-btn">➤</button>
+    </form>
+</div>
+
+<!-- Вікно налаштувань та перенесення -->
+<div class="modal" id="settingsModal">
+    <div class="modal-content">
+        <h2 style="font-size: 1.25rem;">Керування акаунтами</h2>
+
+        <!-- Блок швидкого копіювання / вставки між пристроями -->
+        <div class="sync-box">
+            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">ПЕРЕНОС БАЗИ (ПК ⇄ IPHONE):</div>
+            <div class="sync-buttons">
+                <button type="button" class="sync-btn" onclick="handleExport()">📋 Експортувати базу</button>
+                <button type="button" class="sync-btn" onclick="toggleImportBox()">📥 Імпортувати базу</button>
+            </div>
+            <div id="syncAreaWrapper" style="display: none; flex-direction: column; gap: 6px;">
+                <textarea id="syncCodeInput" class="sync-textarea" placeholder="Вставте сюди код бази..."></textarea>
+                <button type="button" class="send-btn" style="padding: 8px; font-size: 0.85rem;" onclick="applyImport()">Застосувати імпорт</button>
+            </div>
+        </div>
 
         <div class="modal-scroll-area" id="accountsModalList"></div>
 
-        <button class="add-account-btn" onclick="addNewAccountRow()">
-          + Додати ще акаунт
-        </button>
+        <button class="add-account-btn" onclick="addNewAccountRow()">+ Додати ще акаунт</button>
 
         <div class="modal-actions">
-          <button class="settings-btn" onclick="closeModal()">Закрити</button>
-          <button
-            class="send-btn"
-            style="padding: 10px 20px"
-            onclick="saveAccountsFromModal()"
-          >
-            Зберегти
-          </button>
+            <button class="settings-btn" onclick="closeModal()">Закрити</button>
+            <button class="send-btn" style="padding: 10px 20px;" onclick="saveAccountsFromModal()">Зберегти</button>
         </div>
-      </div>
     </div>
+</div>
 
-    <script>
-      const CHANNEL = "olexandrich";
-      let currentAccountIndex = 0;
-      let accounts = [];
+<script>
+    const CHANNEL = 'olexandrich';
+    let currentAccountIndex = 0;
+    let accounts = [];
 
-      // Завантаження збережених акаунтів (необмежено)
-      function loadAccounts() {
-        const saved = localStorage.getItem("twitch_unlimited_accounts");
+    function loadAccounts() {
+        const saved = localStorage.getItem('twitch_unlimited_accounts');
         if (saved) {
-          try {
-            accounts = JSON.parse(saved);
-          } catch (e) {
-            accounts = [];
-          }
+            try {
+                accounts = JSON.parse(saved);
+            } catch (e) {
+                accounts = [];
+            }
         }
-
-        // Якщо ще немає збережених акаунтів — створимо 1 стартовий
         if (!Array.isArray(accounts) || accounts.length === 0) {
-          accounts = [{ username: "", token: "" }];
+            accounts = [{ username: '', token: '' }];
         }
-      }
+    }
 
-      function renderAccountBar() {
-        const bar = document.getElementById("accountBar");
-        bar.innerHTML = "";
+    function renderAccountBar() {
+        const bar = document.getElementById('accountBar');
+        bar.innerHTML = '';
 
         if (currentAccountIndex >= accounts.length) {
-          currentAccountIndex = 0;
+            currentAccountIndex = 0;
         }
 
         accounts.forEach((acc, index) => {
-          const slot = document.createElement("div");
-          slot.className = `account-slot ${index === currentAccountIndex ? "active" : ""}`;
-          const label = acc.username ? `@${acc.username}` : `Слот ${index + 1}`;
-          slot.innerText = label;
-          slot.onclick = () => selectAccount(index);
-          bar.appendChild(slot);
+            const slot = document.createElement('div');
+            slot.className = `account-slot ${index === currentAccountIndex ? 'active' : ''}`;
+            const label = acc.username ? `@${acc.username}` : `Слот ${index + 1}`;
+            slot.innerText = label;
+            slot.onclick = () => selectAccount(index);
+            bar.appendChild(slot);
         });
-      }
+    }
 
-      function selectAccount(index) {
+    function selectAccount(index) {
         currentAccountIndex = index;
         renderAccountBar();
         initSenderSocket();
         const activeAcc = accounts[currentAccountIndex];
-        const label =
-          activeAcc && activeAcc.username
-            ? `@${activeAcc.username}`
-            : `Слот ${index + 1}`;
+        const label = activeAcc && activeAcc.username ? `@${activeAcc.username}` : `Слот ${index + 1}`;
         addSystemMessage(`Обрано: ${label}`);
-      }
+    }
 
-      // Рендер форми в модалці
-      let tempModalAccounts = [];
+    /* Модалка налаштувань */
+    let tempModalAccounts = [];
 
-      function openModal() {
-        // Копіюємо стан акаунтів для редагування
+    function openModal() {
         tempModalAccounts = JSON.parse(JSON.stringify(accounts));
         renderModalList();
-        document.getElementById("settingsModal").classList.add("open");
-      }
+        document.getElementById('syncAreaWrapper').style.display = 'none';
+        document.getElementById('settingsModal').classList.add('open');
+    }
 
-      function closeModal() {
-        document.getElementById("settingsModal").classList.remove("open");
-      }
+    function closeModal() {
+        document.getElementById('settingsModal').classList.remove('open');
+    }
 
-      function renderModalList() {
-        const list = document.getElementById("accountsModalList");
-        list.innerHTML = "";
+    function renderModalList() {
+        const list = document.getElementById('accountsModalList');
+        list.innerHTML = '';
 
         tempModalAccounts.forEach((acc, i) => {
-          const card = document.createElement("div");
-          card.className = "slot-card";
-          card.innerHTML = `
+            const card = document.createElement('div');
+            card.className = 'slot-card';
+            card.innerHTML = `
                 <div class="slot-header">
                     <span class="slot-title">Акаунт #${i + 1}</span>
-                    ${tempModalAccounts.length > 1 ? `<button type="button" class="delete-slot-btn" onclick="deleteModalAccount(${i})">Видалити ✕</button>` : ""}
+                    ${tempModalAccounts.length > 1 ? `<button type="button" class="delete-slot-btn" onclick="deleteModalAccount(${i})">Видалити ✕</button>` : ''}
                 </div>
-                <input type="text" placeholder="Нікнейм Twitch" value="${acc.username || ""}" oninput="tempModalAccounts[${i}].username = this.value.trim().toLowerCase()">
-                <input type="password" placeholder="Access token" value="${acc.token || ""}" oninput="tempModalAccounts[${i}].token = this.value.trim()">
+                <input type="text" placeholder="Нікнейм Twitch" value="${acc.username || ''}" oninput="tempModalAccounts[${i}].username = this.value.trim().toLowerCase()">
+                <input type="password" placeholder="Access token" value="${acc.token || ''}" oninput="tempModalAccounts[${i}].token = this.value.trim()">
             `;
-          list.appendChild(card);
+            list.appendChild(card);
         });
-      }
+    }
 
-      function addNewAccountRow() {
-        tempModalAccounts.push({ username: "", token: "" });
+    function addNewAccountRow() {
+        tempModalAccounts.push({ username: '', token: '' });
         renderModalList();
-        const scrollArea = document.getElementById("accountsModalList");
-        setTimeout(() => (scrollArea.scrollTop = scrollArea.scrollHeight), 50);
-      }
+        const scrollArea = document.getElementById('accountsModalList');
+        setTimeout(() => scrollArea.scrollTop = scrollArea.scrollHeight, 50);
+    }
 
-      function deleteModalAccount(index) {
+    function deleteModalAccount(index) {
         tempModalAccounts.splice(index, 1);
         renderModalList();
-      }
+    }
 
-      function saveAccountsFromModal() {
-        accounts = tempModalAccounts.map((acc) => {
-          let t = acc.token || "";
-          if (t && !t.startsWith("oauth:")) {
-            t = "oauth:" + t;
-          }
-          return {
-            username: acc.username || "",
-            token: t,
-          };
+    function saveAccountsFromModal() {
+        accounts = tempModalAccounts.map(acc => {
+            let t = acc.token || '';
+            if (t && !t.startsWith('oauth:')) {
+                t = 'oauth:' + t;
+            }
+            return {
+                username: acc.username || '',
+                token: t
+            };
         });
 
         if (accounts.length === 0) {
-          accounts.push({ username: "", token: "" });
+            accounts.push({ username: '', token: '' });
         }
 
-        localStorage.setItem(
-          "twitch_unlimited_accounts",
-          JSON.stringify(accounts),
-        );
+        localStorage.setItem('twitch_unlimited_accounts', JSON.stringify(accounts));
         closeModal();
         renderAccountBar();
         initSenderSocket();
-      }
+    }
 
-      /* ---------------- IRC З'ЄДНАННЯ ---------------- */
+    /* ---------------- ФУНКЦІЇ ПЕРЕНОСУ БАЗИ (ЕКСПОРТ / ІМПОРТ) ---------------- */
 
-      let readerWs = null;
-      let senderWs = null;
-      const messagesBox = document.getElementById("messagesContainer");
-      const statusDot = document.getElementById("statusDot");
+    function handleExport() {
+        // Зберігаємо поточний стан полів перед генерацією
+        const exportData = tempModalAccounts.filter(a => a.username || a.token);
+        if (exportData.length === 0) {
+            alert('У вас немає заповнених акаунтів для експорту!');
+            return;
+        }
 
-      function initReaderSocket() {
+        // Кодуємо в компактний безпечний рядок Base64
+        const rawJson = JSON.stringify(exportData);
+        const encoded = btoa(unescape(encodeURIComponent(rawJson)));
+
+        navigator.clipboard.writeText(encoded).then(() => {
+            alert('✅ Базу скопійовано в буфер обміну!\n\nНадішліть цей текст у свій Telegram (наприклад, у "Збережене") і вставте його через імпорт на iPhone.');
+        }).catch(() => {
+            const wrapper = document.getElementById('syncAreaWrapper');
+            const textarea = document.getElementById('syncCodeInput');
+            wrapper.style.display = 'flex';
+            textarea.value = encoded;
+            textarea.select();
+            alert('Скопіюйте згенерований код із текстового поля нижче.');
+        });
+    }
+
+    function toggleImportBox() {
+        const wrapper = document.getElementById('syncAreaWrapper');
+        wrapper.style.display = wrapper.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    function applyImport() {
+        const textarea = document.getElementById('syncCodeInput');
+        const code = textarea.value.trim();
+        if (!code) {
+            alert('Спочатку вставте код бази у поле!');
+            return;
+        }
+
+        try {
+            const decodedJson = decodeURIComponent(escape(atob(code)));
+            const parsed = JSON.parse(decodedJson);
+
+            if (!Array.isArray(parsed) || parsed.length === 0) {
+                throw new Error('Invalid format');
+            }
+
+            tempModalAccounts = parsed.map(item => ({
+                username: item.username || '',
+                token: item.token || ''
+            }));
+
+            renderModalList();
+            saveAccountsFromModal();
+            textarea.value = '';
+            document.getElementById('syncAreaWrapper').style.display = 'none';
+            alert(`🎉 Успішно завантажено ${tempModalAccounts.length} акаунт(ів)!`);
+        } catch (err) {
+            alert('❌ Помилка імпорту! Переконайтеся, що ви скопіювали коректний код бази.');
+        }
+    }
+
+    /* ---------------- IRC З'ЄДНАННЯ ---------------- */
+
+    let readerWs = null;
+    let senderWs = null;
+    const messagesBox = document.getElementById('messagesContainer');
+    const statusDot = document.getElementById('statusDot');
+
+    function initReaderSocket() {
         if (readerWs) readerWs.close();
-        readerWs = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
+        readerWs = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
 
         readerWs.onopen = () => {
-          statusDot.classList.add("online");
-          readerWs.send("CAP REQ :twitch.tv/tags twitch.tv/commands\r\n");
-          readerWs.send(
-            `NICK justinfan${Math.floor(10000 + Math.random() * 90000)}\r\n`,
-          );
-          readerWs.send(`JOIN #${CHANNEL}\r\n`);
-          addSystemMessage(`Підключено до чату каналу #${CHANNEL}.`);
+            statusDot.classList.add('online');
+            readerWs.send('CAP REQ :twitch.tv/tags twitch.tv/commands\r\n');
+            readerWs.send(`NICK justinfan${Math.floor(10000 + Math.random() * 90000)}\r\n`);
+            readerWs.send(`JOIN #${CHANNEL}\r\n`);
+            addSystemMessage(`Підключено до чату каналу #${CHANNEL}.`);
         };
 
         readerWs.onmessage = (event) => {
-          const raw = event.data;
-          if (raw.startsWith("PING")) {
-            readerWs.send("PONG :tmi.twitch.tv\r\n");
-            return;
-          }
-          raw.split("\r\n").forEach((line) => parseMessageLine(line));
+            const raw = event.data;
+            if (raw.startsWith('PING')) {
+                readerWs.send('PONG :tmi.twitch.tv\r\n');
+                return;
+            }
+            raw.split('\r\n').forEach(line => parseMessageLine(line));
         };
 
         readerWs.onclose = () => {
-          statusDot.classList.remove("online");
-          setTimeout(initReaderSocket, 5000);
+            statusDot.classList.remove('online');
+            setTimeout(initReaderSocket, 5000);
         };
-      }
+    }
 
-      function initSenderSocket() {
+    function initSenderSocket() {
         if (senderWs) {
-          try {
-            senderWs.close();
-          } catch (e) {}
-          senderWs = null;
+            try { senderWs.close(); } catch(e) {}
+            senderWs = null;
         }
 
         const activeAcc = accounts[currentAccountIndex];
         if (!activeAcc || !activeAcc.username || !activeAcc.token) return;
 
-        senderWs = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
+        senderWs = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
         senderWs.onopen = () => {
-          senderWs.send(`PASS ${activeAcc.token}\r\n`);
-          senderWs.send(`NICK ${activeAcc.username}\r\n`);
-          senderWs.send(`JOIN #${CHANNEL}\r\n`);
+            senderWs.send(`PASS ${activeAcc.token}\r\n`);
+            senderWs.send(`NICK ${activeAcc.username}\r\n`);
+            senderWs.send(`JOIN #${CHANNEL}\r\n`);
         };
 
         senderWs.onmessage = (e) => {
-          if (e.data.startsWith("PING")) {
-            senderWs.send("PONG :tmi.twitch.tv\r\n");
-          }
+            if (e.data.startsWith('PING')) {
+                senderWs.send('PONG :tmi.twitch.tv\r\n');
+            }
         };
-      }
+    }
 
-      function parseMessageLine(line) {
+    function parseMessageLine(line) {
         if (!line.trim()) return;
 
-        if (line.includes("PRIVMSG")) {
-          let tags = {};
-          let rest = line;
+        if (line.includes('PRIVMSG')) {
+            let tags = {};
+            let rest = line;
 
-          if (rest.startsWith("@")) {
-            const spaceIdx = rest.indexOf(" ");
-            const tagStr = rest.slice(1, spaceIdx);
-            rest = rest.slice(spaceIdx + 1);
-            tagStr.split(";").forEach((p) => {
-              const [k, v] = p.split("=");
-              tags[k] = v;
-            });
-          }
+            if (rest.startsWith('@')) {
+                const spaceIdx = rest.indexOf(' ');
+                const tagStr = rest.slice(1, spaceIdx);
+                rest = rest.slice(spaceIdx + 1);
+                tagStr.split(';').forEach(p => {
+                    const [k, v] = p.split('=');
+                    tags[k] = v;
+                });
+            }
 
-          const prefixEnd = rest.indexOf(" ");
-          const prefix = rest.slice(1, prefixEnd);
-          const userFromPrefix = prefix.split("!")[0];
-          const colonIdx = rest.indexOf(" :", prefixEnd);
+            const prefixEnd = rest.indexOf(' ');
+            const prefix = rest.slice(1, prefixEnd);
+            const userFromPrefix = prefix.split('!')[0];
+            const colonIdx = rest.indexOf(' :', prefixEnd);
 
-          if (colonIdx !== -1) {
-            const messageText = rest.slice(colonIdx + 2);
-            const displayName = tags["display-name"] || userFromPrefix;
-            const color = tags["color"] || "#9146ff";
-            renderChatMessage(displayName, color, messageText);
-          }
+            if (colonIdx !== -1) {
+                const messageText = rest.slice(colonIdx + 2);
+                const displayName = tags['display-name'] || userFromPrefix;
+                const color = tags['color'] || '#9146ff';
+                renderChatMessage(displayName, color, messageText);
+            }
         }
-      }
+    }
 
-      function renderChatMessage(name, color, text) {
-        const timeStr = new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        const row = document.createElement("div");
-        row.className = "message-row";
+    function renderChatMessage(name, color, text) {
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const row = document.createElement('div');
+        row.className = 'message-row';
         row.innerHTML = `
             <span class="time">${timeStr}</span>
             <span class="username" style="color: ${color}">${escapeHTML(name)}:</span>
@@ -656,67 +728,61 @@
         `;
         messagesBox.appendChild(row);
         messagesBox.scrollTop = messagesBox.scrollHeight;
-      }
+    }
 
-      function addSystemMessage(text) {
-        const row = document.createElement("div");
-        row.className = "system-msg";
+    function addSystemMessage(text) {
+        const row = document.createElement('div');
+        row.className = 'system-msg';
         row.innerText = `[Система]: ${text}`;
         messagesBox.appendChild(row);
         messagesBox.scrollTop = messagesBox.scrollHeight;
-      }
+    }
 
-      function handleSendMessage(e) {
+    function handleSendMessage(e) {
         e.preventDefault();
-        const input = document.getElementById("chatInput");
+        const input = document.getElementById('chatInput');
         const text = input.value.trim();
         if (!text) return;
 
         const activeAcc = accounts[currentAccountIndex];
         if (!activeAcc || !activeAcc.username || !activeAcc.token) {
-          alert(
-            `Поточний слот ще не налаштовано! Відкрийте «⚙️ Акаунти» та вкажіть нік і токен.`,
-          );
-          return;
+            alert(`Поточний слот ще не налаштовано! Відкрийте «⚙️ Акаунти» та вкажіть нік і токен.`);
+            return;
         }
 
         if (!senderWs || senderWs.readyState !== WebSocket.OPEN) {
-          initSenderSocket();
-          setTimeout(() => {
-            if (senderWs && senderWs.readyState === WebSocket.OPEN) {
-              senderWs.send(`PRIVMSG #${CHANNEL} :${text}\r\n`);
-              renderChatMessage(activeAcc.username, "#00f59b", text);
-              input.value = "";
-            } else {
-              alert("Помилка підключення. Перевірте правильність токена.");
-            }
-          }, 800);
-          return;
+            initSenderSocket();
+            setTimeout(() => {
+                if (senderWs && senderWs.readyState === WebSocket.OPEN) {
+                    senderWs.send(`PRIVMSG #${CHANNEL} :${text}\r\n`);
+                    renderChatMessage(activeAcc.username, '#00f59b', text);
+                    input.value = '';
+                } else {
+                    alert('Помилка підключення. Перевірте правильність токена.');
+                }
+            }, 800);
+            return;
         }
 
         senderWs.send(`PRIVMSG #${CHANNEL} :${text}\r\n`);
-        renderChatMessage(activeAcc.username, "#00f59b", text);
-        input.value = "";
-      }
+        renderChatMessage(activeAcc.username, '#00f59b', text);
+        input.value = '';
+    }
 
-      function escapeHTML(str) {
-        return str.replace(
-          /[&<>'"]/g,
-          (tag) =>
-            ({
-              "&": "&amp;",
-              "<": "&lt;",
-              ">": "&gt;",
-              "'": "&#39;",
-              '"': "&quot;",
-            })[tag] || tag,
-        );
-      }
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag] || tag));
+    }
 
-      loadAccounts();
-      renderAccountBar();
-      initReaderSocket();
-      initSenderSocket();
-    </script>
-  </body>
+    loadAccounts();
+    renderAccountBar();
+    initReaderSocket();
+    initSenderSocket();
+</script>
+</body>
 </html>
