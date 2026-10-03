@@ -3,403 +3,440 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Twitch Chat Multi-Account — Olexandrich</title>
+    <title>Twitch Chat Multi-Account</title>
     <style>
-        :root {
-            --bg-main: #0e0e10;
-            --bg-secondary: #18181b;
-            --bg-tertiary: #1f1f23;
-            --border-color: #2f2f35;
-            --accent: #9146ff;
-            --accent-hover: #772ce8;
-            --text-main: #efeff1;
-            --text-muted: #adadb8;
-            --danger: #eb0400;
-            --success: #00f59b;
-        }
+      :root {
+        --bg-main: #0e0e10;
+        --bg-secondary: #18181b;
+        --bg-tertiary: #1f1f23;
+        --border-color: #2f2f35;
+        --accent: #9146ff;
+        --accent-hover: #772ce8;
+        --text-main: #efeff1;
+        --text-muted: #adadb8;
+        --danger: #eb0400;
+        --success: #00f59b;
+      }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        -webkit-tap-highlight-color: transparent;
+      }
 
+      body {
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        height: 100dvh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .chat-app {
+        width: 100%;
+        max-width: 900px;
+        height: 100dvh;
+        background: var(--bg-secondary);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      @media (min-width: 601px) {
         body {
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            height: 100dvh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+          padding: 16px;
         }
-
         .chat-app {
-            width: 100%;
-            max-width: 900px;
-            height: 100dvh;
-            background: var(--bg-secondary);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+          height: 92vh;
+          border-radius: 12px;
+          border: 1px solid var(--border-color);
+          box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
         }
+      }
 
-        @media (min-width: 601px) {
-            body {
-                padding: 16px;
-            }
-            .chat-app {
-                height: 92vh;
-                border-radius: 12px;
-                border: 1px solid var(--border-color);
-                box-shadow: 0 12px 36px rgba(0,0,0,0.5);
-            }
-        }
+      /* Хедер */
+      header {
+        padding-top: max(12px, env(safe-area-inset-top));
+        padding-bottom: 12px;
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+        background: var(--bg-tertiary);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        flex-shrink: 0;
+      }
 
-        /* Хедер (з відступом під "чубчик" iPhone) */
-        header {
-            padding-top: max(12px, env(safe-area-inset-top));
-            padding-bottom: 12px;
-            padding-left: max(16px, env(safe-area-inset-left));
-            padding-right: max(16px, env(safe-area-inset-right));
-            background: var(--bg-tertiary);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            flex-shrink: 0;
-        }
+      .channel-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.95rem;
+      }
 
-        .channel-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.95rem;
-        }
+      .status-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background-color: var(--danger);
+        box-shadow: 0 0 8px var(--danger);
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+      }
 
-        .status-dot {
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            background-color: var(--danger);
-            box-shadow: 0 0 8px var(--danger);
-            transition: all 0.3s ease;
-        }
+      .status-dot.online {
+        background-color: var(--success);
+        box-shadow: 0 0 8px var(--success);
+      }
 
-        .status-dot.online {
-            background-color: var(--success);
-            box-shadow: 0 0 8px var(--success);
-        }
+      .channel-title-badge {
+        font-weight: 700;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: #141416;
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        transition: border-color 0.2s;
+      }
 
-        .channel-title {
-            font-weight: 700;
-            white-space: nowrap;
-        }
+      .channel-title-badge:hover {
+        border-color: var(--accent);
+      }
 
-        .settings-btn {
-            background: #2b2b31;
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            white-space: nowrap;
-        }
+      .settings-btn {
+        background: #2b2b31;
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
 
-        /* Область повідомлень */
-        .messages-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-        }
+      /* Область повідомлень */
+      .messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+      }
 
-        .message-row {
-            line-height: 1.4;
-            font-size: 0.95rem;
-            word-break: break-word;
-            padding: 4px 6px;
-            border-radius: 6px;
-        }
+      .message-row {
+        line-height: 1.4;
+        font-size: 0.95rem;
+        word-break: break-word;
+        padding: 4px 6px;
+        border-radius: 6px;
+      }
 
-        .time {
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            margin-right: 6px;
-        }
+      .time {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        margin-right: 6px;
+      }
 
-        .username {
-            font-weight: 700;
-            margin-right: 6px;
-        }
+      .username {
+        font-weight: 700;
+        margin-right: 6px;
+      }
 
-        .system-msg {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            font-style: italic;
-        }
+      .system-msg {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-style: italic;
+      }
 
-        /* Вибір активного акаунту */
-        .account-bar {
-            background: var(--bg-tertiary);
-            padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            overflow-x: auto;
-            white-space: nowrap;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            flex-shrink: 0;
-        }
+      /* Смужка акаунтів */
+      .account-bar {
+        background: var(--bg-tertiary);
+        padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-shrink: 0;
+      }
 
-        .account-bar::-webkit-scrollbar {
-            display: none;
-        }
+      .account-bar::-webkit-scrollbar {
+        display: none;
+      }
 
-        .account-slot {
-            flex-shrink: 0;
-            padding: 8px 14px;
-            background: #141416;
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
+      .account-slot {
+        flex-shrink: 0;
+        padding: 8px 14px;
+        background: #141416;
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.2s;
+      }
 
-        .account-slot.active {
-            background: rgba(145, 70, 255, 0.2);
-            border-color: var(--accent);
-            color: #fff;
-            box-shadow: 0 0 10px rgba(145, 70, 255, 0.35);
-        }
+      .account-slot.active {
+        background: rgba(145, 70, 255, 0.2);
+        border-color: var(--accent);
+        color: #fff;
+        box-shadow: 0 0 10px rgba(145, 70, 255, 0.35);
+      }
 
-        /* Введення повідомлення */
-        .chat-input-wrapper {
-            padding-top: 10px;
-            padding-bottom: max(12px, env(safe-area-inset-bottom));
-            padding-left: max(12px, env(safe-area-inset-left));
-            padding-right: max(12px, env(safe-area-inset-right));
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            gap: 8px;
-            flex-shrink: 0;
-        }
+      /* Поле вводу */
+      .chat-input-wrapper {
+        padding-top: 10px;
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+      }
 
-        .input-box {
-            flex: 1;
-            background: var(--bg-main);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 12px 14px;
-            border-radius: 10px;
-            outline: none;
-            font-size: 16px; /* Запобігає зуму на iPhone */
-        }
+      .input-box {
+        flex: 1;
+        background: var(--bg-main);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 12px 14px;
+        border-radius: 10px;
+        outline: none;
+        font-size: 16px;
+      }
 
-        .input-box:focus {
-            border-color: var(--accent);
-        }
+      .input-box:focus {
+        border-color: var(--accent);
+      }
 
-        .send-btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0 18px;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            min-height: 44px;
-        }
+      .send-btn {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        padding: 0 18px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        min-height: 44px;
+      }
 
-        /* Модальне вікно */
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.75);
-            backdrop-filter: blur(6px);
-            align-items: center;
-            justify-content: center;
-            z-index: 999;
-        }
+      /* Модальне вікно */
+      .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(6px);
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+      }
 
-        .modal.open {
-            display: flex;
-        }
+      .modal.open {
+        display: flex;
+      }
 
+      .modal-content {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding-top: max(16px, env(safe-area-inset-top));
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+      }
+
+      @media (min-width: 601px) {
         .modal-content {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            padding-top: max(16px, env(safe-area-inset-top));
-            padding-bottom: max(16px, env(safe-area-inset-bottom));
-            padding-left: max(16px, env(safe-area-inset-left));
-            padding-right: max(16px, env(safe-area-inset-right));
+          width: 90%;
+          max-width: 620px;
+          height: auto;
+          max-height: 88vh;
+          border-radius: 14px;
+          padding: 24px;
         }
+      }
 
-        @media (min-width: 601px) {
-            .modal-content {
-                width: 90%;
-                max-width: 620px;
-                height: auto;
-                max-height: 88vh;
-                border-radius: 14px;
-                padding: 24px;
-            }
-        }
+      /* Блок вибору каналу в модалці */
+      .channel-setting-box {
+        background: #131316;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px;
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
 
-        /* Секція Експорту / Імпорту */
-        .sync-box {
-            background: #131316;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 12px;
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+      .channel-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
 
-        .sync-buttons {
-            display: flex;
-            gap: 8px;
-        }
+      .channel-input-wrapper span {
+        color: var(--accent);
+        font-weight: 700;
+        font-size: 1.1rem;
+      }
 
-        .sync-btn {
-            flex: 1;
-            background: #25252b;
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 9px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
+      /* Секція Експорту / Імпорту */
+      .sync-box {
+        background: #131316;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px;
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
 
-        .sync-btn:hover {
-            border-color: var(--accent);
-        }
+      .sync-buttons {
+        display: flex;
+        gap: 8px;
+      }
 
-        .sync-textarea {
-            width: 100%;
-            height: 70px;
-            background: var(--bg-main);
-            border: 1px solid var(--border-color);
-            color: #fff;
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 14px;
-            resize: none;
-            outline: none;
-        }
+      .sync-btn {
+        flex: 1;
+        background: #25252b;
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 9px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
 
-        .sync-textarea:focus {
-            border-color: var(--accent);
-        }
+      .sync-btn:hover {
+        border-color: var(--accent);
+      }
 
-        .modal-scroll-area {
-            flex: 1;
-            overflow-y: auto;
-            margin: 14px 0;
-            padding-right: 4px;
-            -webkit-overflow-scrolling: touch;
-        }
+      .sync-textarea {
+        width: 100%;
+        height: 70px;
+        background: var(--bg-main);
+        border: 1px solid var(--border-color);
+        color: #fff;
+        padding: 8px;
+        border-radius: 6px;
+        font-size: 14px;
+        resize: none;
+        outline: none;
+      }
 
-        .slot-card {
-            background: var(--bg-main);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+      .sync-textarea:focus {
+        border-color: var(--accent);
+      }
 
-        .slot-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+      .modal-scroll-area {
+        flex: 1;
+        overflow-y: auto;
+        margin: 14px 0;
+        padding-right: 4px;
+        -webkit-overflow-scrolling: touch;
+      }
 
-        .slot-title {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--accent);
-            text-transform: uppercase;
-        }
+      .slot-card {
+        background: var(--bg-main);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
 
-        .delete-slot-btn {
-            background: transparent;
-            border: none;
-            color: var(--danger);
-            cursor: pointer;
-            font-size: 0.85rem;
-            padding: 4px 8px;
-        }
+      .slot-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
-        .slot-card input {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            color: #fff;
-            padding: 10px 12px;
-            border-radius: 6px;
-            font-size: 16px;
-            outline: none;
-            width: 100%;
-        }
+      .slot-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--accent);
+        text-transform: uppercase;
+      }
 
-        .slot-card input:focus {
-            border-color: var(--accent);
-        }
+      .delete-slot-btn {
+        background: transparent;
+        border: none;
+        color: var(--danger);
+        cursor: pointer;
+        font-size: 0.85rem;
+        padding: 4px 8px;
+      }
 
-        .add-account-btn {
-            width: 100%;
-            background: transparent;
-            border: 2px dashed var(--border-color);
-            color: var(--text-main);
-            padding: 12px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-            transition: border-color 0.2s;
-        }
+      .slot-card input, .channel-setting-box input {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        color: #fff;
+        padding: 10px 12px;
+        border-radius: 6px;
+        font-size: 16px;
+        outline: none;
+        width: 100%;
+      }
 
-        .add-account-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
+      .slot-card input:focus, .channel-setting-box input:focus {
+        border-color: var(--accent);
+      }
 
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            flex-shrink: 0;
-        }
+      .add-account-btn {
+        width: 100%;
+        background: transparent;
+        border: 2px dashed var(--border-color);
+        color: var(--text-main);
+        padding: 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+        transition: border-color 0.2s;
+      }
+
+      .add-account-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-shrink: 0;
+      }
     </style>
 </head>
 <body>
@@ -408,15 +445,20 @@
     <header>
         <div class="channel-info">
             <div id="statusDot" class="status-dot"></div>
-            <span class="channel-title">#<span style="color: var(--accent);">olexandrich</span></span>
+            <!-- Клікабельний канал для швидкої зміни прямо з хедера -->
+            <div class="channel-title-badge" onclick="openChannelPrompt()" title="Натисніть для зміни каналу">
+                <span>#</span><span id="currentChannelName" style="color: var(--accent);">olexandrich</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); margin-left: 2px;">✏️</span>
+            </div>
         </div>
-        <button class="settings-btn" onclick="openModal()">⚙️ Акаунти</button>
+        <button class="settings-btn" onclick="openModal()">⚙️ Налаштування</button>
     </header>
 
     <div id="messagesContainer" class="messages-container">
         <div class="system-msg">Підключення до чату...</div>
     </div>
 
+    <!-- Вибір активного акаунту -->
     <div class="account-bar" id="accountBar"></div>
 
     <form class="chat-input-wrapper" onsubmit="handleSendMessage(event)">
@@ -425,12 +467,21 @@
     </form>
 </div>
 
-<!-- Вікно налаштувань та перенесення -->
+<!-- Модальне вікно -->
 <div class="modal" id="settingsModal">
     <div class="modal-content">
-        <h2 style="font-size: 1.25rem;">Керування акаунтами</h2>
+        <h2 style="font-size: 1.25rem;">Налаштування</h2>
 
-        <!-- Блок швидкого копіювання / вставки між пристроями -->
+        <!-- Блок зміни цільового каналу -->
+        <div class="channel-setting-box">
+            <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">КАНАЛ ДЛЯ ЧАТУ:</label>
+            <div class="channel-input-wrapper">
+                <span>#</span>
+                <input type="text" id="channelModalInput" placeholder="наприклад: olexandrich" autocomplete="off" autocorrect="off" autocapitalize="off">
+            </div>
+        </div>
+
+        <!-- Перенос бази -->
         <div class="sync-box">
             <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">ПЕРЕНОС БАЗИ (ПК ⇄ IPHONE):</div>
             <div class="sync-buttons">
@@ -455,9 +506,42 @@
 </div>
 
 <script>
-    const CHANNEL = 'olexandrich';
+    let CHANNEL = localStorage.getItem('twitch_chat_channel') || 'olexandrich';
     let currentAccountIndex = 0;
     let accounts = [];
+
+    let readerWs = null;
+    let senderWs = null;
+    const messagesBox = document.getElementById('messagesContainer');
+    const statusDot = document.getElementById('statusDot');
+
+    function updateChannelUI() {
+        document.getElementById('currentChannelName').innerText = CHANNEL;
+        document.title = `Twitch Chat #${CHANNEL}`;
+    }
+
+    function setChannel(newChannel) {
+        if (!newChannel) return;
+        newChannel = newChannel.trim().toLowerCase().replace(/^#/, '');
+        if (!newChannel || newChannel === CHANNEL) return;
+
+        CHANNEL = newChannel;
+        localStorage.setItem('twitch_chat_channel', CHANNEL);
+        updateChannelUI();
+
+        messagesBox.innerHTML = '';
+        addSystemMessage(`Перемикання на канал #${CHANNEL}...`);
+
+        initReaderSocket();
+        initSenderSocket();
+    }
+
+    function openChannelPrompt() {
+        const input = prompt('Введіть назву каналу Twitch:', CHANNEL);
+        if (input !== null) {
+            setChannel(input);
+        }
+    }
 
     function loadAccounts() {
         const saved = localStorage.getItem('twitch_unlimited_accounts');
@@ -505,6 +589,7 @@
 
     function openModal() {
         tempModalAccounts = JSON.parse(JSON.stringify(accounts));
+        document.getElementById('channelModalInput').value = CHANNEL;
         renderModalList();
         document.getElementById('syncAreaWrapper').style.display = 'none';
         document.getElementById('settingsModal').classList.add('open');
@@ -546,6 +631,9 @@
     }
 
     function saveAccountsFromModal() {
+        const newChan = document.getElementById('channelModalInput').value.trim();
+        const channelChanged = newChan && newChan.toLowerCase().replace(/^#/, '') !== CHANNEL;
+
         accounts = tempModalAccounts.map(acc => {
             let t = acc.token || '';
             if (t && !t.startsWith('oauth:')) {
@@ -564,25 +652,28 @@
         localStorage.setItem('twitch_unlimited_accounts', JSON.stringify(accounts));
         closeModal();
         renderAccountBar();
-        initSenderSocket();
+
+        if (channelChanged) {
+            setChannel(newChan);
+        } else {
+            initSenderSocket();
+        }
     }
 
     /* ---------------- ФУНКЦІЇ ПЕРЕНОСУ БАЗИ (ЕКСПОРТ / ІМПОРТ) ---------------- */
 
     function handleExport() {
-        // Зберігаємо поточний стан полів перед генерацією
         const exportData = tempModalAccounts.filter(a => a.username || a.token);
         if (exportData.length === 0) {
             alert('У вас немає заповнених акаунтів для експорту!');
             return;
         }
 
-        // Кодуємо в компактний безпечний рядок Base64
         const rawJson = JSON.stringify(exportData);
         const encoded = btoa(unescape(encodeURIComponent(rawJson)));
 
         navigator.clipboard.writeText(encoded).then(() => {
-            alert('✅ Базу скопійовано в буфер обміну!\n\nНадішліть цей текст у свій Telegram (наприклад, у "Збережене") і вставте його через імпорт на iPhone.');
+            alert('✅ Базу скопійовано в буфер обміну!\n\nНадішліть цей текст у свій Telegram і вставте його через імпорт на iPhone.');
         }).catch(() => {
             const wrapper = document.getElementById('syncAreaWrapper');
             const textarea = document.getElementById('syncCodeInput');
@@ -631,13 +722,11 @@
 
     /* ---------------- IRC З'ЄДНАННЯ ---------------- */
 
-    let readerWs = null;
-    let senderWs = null;
-    const messagesBox = document.getElementById('messagesContainer');
-    const statusDot = document.getElementById('statusDot');
-
     function initReaderSocket() {
-        if (readerWs) readerWs.close();
+        if (readerWs) {
+            readerWs.onclose = null; // відключаємо старий таймер реконекту
+            readerWs.close();
+        }
         readerWs = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
 
         readerWs.onopen = () => {
@@ -746,7 +835,7 @@
 
         const activeAcc = accounts[currentAccountIndex];
         if (!activeAcc || !activeAcc.username || !activeAcc.token) {
-            alert(`Поточний слот ще не налаштовано! Відкрийте «⚙️ Акаунти» та вкажіть нік і токен.`);
+            alert(`Поточний слот ще не налаштовано! Відкрийте «⚙️ Налаштування» та вкажіть нік і токен.`);
             return;
         }
 
@@ -779,6 +868,7 @@
         }[tag] || tag));
     }
 
+    updateChannelUI();
     loadAccounts();
     renderAccountBar();
     initReaderSocket();
